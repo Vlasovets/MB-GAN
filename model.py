@@ -1,12 +1,14 @@
 # Large amount of credit goes to:
 # https://github.com/keras-team/keras-contrib/blob/master/examples/improved_wgan.py
 
-import keras.optimizers
-import keras.backend as K
+from tensorflow import keras
+
+from keras import optimizers
+from keras import backend as K
 
 from keras.layers import Input, Dense, Dropout, Lambda, Layer
 from keras.layers import BatchNormalization, Activation, LeakyReLU
-from keras.layers.merge import _Merge
+# from tensorflow.keras.layers.merge import _Merge
 from keras.models import Sequential, Model
 
 import os
@@ -45,7 +47,7 @@ def get_optimizer(optimizer, lr, decay=0.0, clipnorm=0.0, clipvalue=0.0, **kwarg
     return fn(lr, decay=decay, clipnorm=clipnorm, clipvalue=clipvalue, **kwargs)
 
 
-class RandomWeightedAverage(_Merge):
+class RandomWeightedAverage(Layer):
     """ Calculate a random weighted average between two tensors. """
     def _merge_function(self, inputs):
         batch_size = K.shape(inputs[0])[0]
@@ -163,9 +165,12 @@ class MBGAN(object):
         valid = self.critic(real_sample)
         
         # Determines weighted average between real and fake sample
+        
         interpolated_sample = RandomWeightedAverage()([real_sample, fake_sample])
         validity_interpolated = self.critic(interpolated_sample)
-        
+        #validity_interpolated = self.critic(real_sample)
+
+
         # Get gradient penalty loss
         partial_gp_loss = partial(gradient_penalty_loss, averaged_samples=interpolated_sample)
         partial_gp_loss.__name__ = 'gradient_penalty'
